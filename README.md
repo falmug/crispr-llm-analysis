@@ -209,3 +209,49 @@ Educational project for hackathon purposes.
 ---
 
 **Summary**: This analysis identifies three critical biases in LLM-based CRISPR prediction (95% data exclusion, limited test diversity, train/test mismatch) and proposes six concrete improvements, with ensemble methods already demonstrated. The work emphasizes understanding limitations over chasing performance metrics.
+
+## ⚠️ Limitations & Honest Assessment
+
+### Our Approach vs. Paper's Approach
+
+**Key Differences:**
+
+1. **Test Set**
+   - **Paper**: Tests on completely new papers (out-of-distribution)
+   - **Ours**: Random 70/30 split of their benchmark (in-distribution)
+   - **Impact**: Our test is easier, explaining higher F1 (0.918 vs 0.84)
+
+2. **Model Complexity**
+   - **Paper**: 100M parameter MLP trained on 22.5M examples
+   - **Ours**: Random Forest (~300K parameters) trained on 1,269 examples
+   - **Impact**: Simpler model, faster training, sufficient for analysis purposes
+
+3. **Scope**
+   - **Paper**: Full training pipeline on 1,673 papers
+   - **Ours**: Evaluation and analysis on their test benchmark
+   - **Impact**: We replicate their *evaluation methodology*, not full training
+
+### What This Means
+
+✅ **Our analysis remains valid because:**
+- Data biases we identify (95% exclusion, class imbalance) exist independently of model choice
+- Error patterns reveal real biological challenges in the data
+- Ensemble benefits demonstrate general ML principles
+- LLM improvement proposals address fundamental approach limitations
+
+❌ **What we don't claim:**
+- Our model outperforms theirs (different test methodology)
+- Our approach scales to full training dataset (computational constraints)
+- Our F1 score represents out-of-distribution performance (in-distribution split)
+
+### Why This Approach Serves the Hackathon Goal
+
+The hackathon asked us to **"understand gaps and propose improvements"** in LLM-based CRISPR prediction, not to achieve state-of-the-art performance. Our focused analysis enables:
+
+1. ✅ Identification of critical data biases (quantified at 95.4%, 7.74%, etc.)
+2. ✅ Empirical testing of ensemble strategies (+0.2% improvement)
+3. ✅ Systematic error pattern analysis
+4. ✅ Concrete, actionable LLM-specific improvement proposals
+
+**These insights are methodology-independent and directly address the core challenge.**
+
