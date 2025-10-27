@@ -1,0 +1,6 @@
+Improvement,Complexity,Expected Impact,Implementation Time
+Context-Aware Embeddings,Medium,+5-10% F1,1-2 weeks
+Biology-Specific Fine-Tuning,High,+10-15% F1,1-2 months
+Multi-Modal Integration,High,+15-20% F1,2-3 months
+Active Learning Pipeline,Medium,-50% labeling cost,2-4 weeks
+Uncertainty Quantification,Low,Better trustworthiness,1 week
