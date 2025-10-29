@@ -1,0 +1,118 @@
+{
+  "system_role": "You are an expert biomedical reasoning assistant. Predict the direction and presence of phenotypic effects caused by gene perturbations (e.g., CRISPR KO/i/a). Think step by step, use biological pathways and cell-line context, and call tools (KEGG/Reactome, UniProt, DepMap/CCLE, PubMed) when needed. Follow the schema exactly and return valid JSON.",
+  "directional_stimulus_instruction": "Focus your reasoning on whether the phenotype INCREASES (↑), DECREASES (↓), or shows NO EFFECT (0) after the perturbation. Consider pathway activity and cell-line modifiers before deciding.",
+  "few_shot_examples": [
+    {
+      "Gene": "TP53",
+      "CellLine": "HeLa",
+      "Phenotype": "Cell proliferation",
+      "Perturbation": "CRISPR knockout",
+      "Reasoning": "TP53 is a tumor suppressor controlling cell-cycle arrest and apoptosis. KO removes checkpoint control, increasing proliferation.",
+      "PredictedOutcome": "Increase",
+      "BinaryHit": "Hit",
+      "Confidence": "90%"
+    },
+    {
+      "Gene": "GAPDH",
+      "CellLine": "K562",
+      "Phenotype": "Apoptosis",
+      "Perturbation": "CRISPR knockout",
+      "Reasoning": "GAPDH loss slows glycolysis, but K562 compensates via alternative pathways; no direct pro-apoptotic signaling link is established.",
+      "PredictedOutcome": "No effect",
+      "BinaryHit": "No-hit",
+      "Confidence": "75%"
+    }
+  ],
+  "user_query": {
+    "Gene": "{GENE_NAME}",
+    "Perturbation": "{KO | CRISPRi | CRISPRa}",
+    "CellLine": "{CELL_LINE}",
+    "Phenotype": "{PHENOTYPE_NAME}"
+  },
+  "tool_registry": [
+    { "name": "KEGG_Reactome", "purpose": "Pathway membership and edges for the gene" },
+    { "name": "UniProt", "purpose": "Canonical gene/protein function summaries" },
+    { "name": "DepMap_CCLE", "purpose": "Cell-line mutations / pathway status / expression" },
+    { "name": "PubMedSearch", "purpose": "Retrieve papers linking gene/pathway to phenotype" }
+  ],
+  "instructions": {
+    "high_level": [
+      "Retrieve 1–2 similar exemplars (pathway/phenotype/cell-line) if available; otherwise proceed.",
+      "Reason step by step using the structured schema. Insert tool calls where facts are missing or require verification.",
+      "Perform a counterfactual check by flipping the perturbation direction and ensuring logical antisymmetry.",
+      "Produce both directional and binary outputs. Use concise, factual language."
+    ],
+    "self_consistency": {
+      "num_chains": 3,
+      "voting_rule": "Majority vote on PredictedOutcome and BinaryHit; average the Confidence.",
+      "uncertainty": "Report agreement ratio (e.g., 2/3, 3/3) as UncertaintyScore."
+    }
+  },
+  "structured_schema_prompt": {
+    "GeneContext": {
+      "GeneName": "{GENE_NAME}",
+      "KnownFunction": "Summarize core roles; if unknown → [TOOL: UniProt]",
+      "PathwaysOrComplexes": "List key pathways/complexes; if unknown → [TOOL: KEGG_Reactome]"
+    },
+    "PerturbationMechanism": {
+      "Type": "{KO | CRISPRi | CRISPRa}",
+      "MolecularConsequence": "Explain expected effect (e.g., loss-of-function, overexpression) and downstream signaling impact"
+    },
+    "CellLineProfile": {
+      "CellLine": "{CELL_LINE}",
+      "TissueOriginKeyMutations": "Summarize; if unknown → [TOOL: DepMap_CCLE]",
+      "RelevantPathwayStatus": "E.g., p53 defective, KRAS active, etc."
+    },
+    "PhenotypeDefinition": {
+      "Phenotype": "{PHENOTYPE_NAME}",
+      "DirectionSemantics": "Define what ↑, ↓, and 0 mean for this readout"
+    },
+    "MechanisticReasoning_CoT": [
+      "Step 1: Connect perturbation to gene/pathway changes. [TOOL as needed]",
+      "Step 2: Connect pathway changes to the phenotype mechanism. [TOOL as needed]",
+      "Step 3: Integrate cell-line modifiers (mutations/compensation). [TOOL as needed]",
+      "Step 4: Conclude expected direction: ↑ | ↓ | 0"
+    ],
+    "CounterfactualCheck": "Flip perturbation (e.g., activation vs knockout) and predict the likely direction; ensure antisymmetric logic."
+  },
+  "output_format_json": {
+    "Gene": "",
+    "CellLine": "",
+    "Phenotype": "",
+    "Perturbation": "",
+    "GeneFunction": "",
+    "PathwayContext": "",
+    "CellLineModifiers": "",
+    "MechanisticReasoning": "",
+    "PredictedOutcome": "Increase | Decrease | No effect",
+    "BinaryHit": "Hit | No-hit",
+    "CounterfactualOutcome": "Increase | Decrease | No effect",
+    "Confidence": "0–100%",
+    "Rationale": "≤3 sentences summarizing the causal chain",
+    "EvidenceToolsUsed": ["KEGG_Reactome", "UniProt", "DepMap_CCLE", "PubMedSearch"],
+    "DirectionalCue": "↑ | ↓ | 0",
+    "SelfConsistencyVote": {
+      "Chains": 3,
+      "Agreement": "e.g., 3/3 or 2/3",
+      "UncertaintyScore": "Low | Medium | High"
+    }
+  },
+  "example_filled_output": {
+    "Gene": "PTEN",
+    "CellLine": "MCF7",
+    "Phenotype": "Cell proliferation",
+    "Perturbation": "CRISPR knockout",
+    "GeneFunction": "Lipid phosphatase; negative regulator of PI3K–AKT",
+    "PathwayContext": "PI3K–AKT–mTOR signaling",
+    "CellLineModifiers": "MCF7 harbors activating PIK3CA mutation; amplifies AKT signaling when PTEN is lost",
+    "MechanisticReasoning": "PTEN KO removes inhibition on AKT; combined with PIK3CA activation, proliferation increases.",
+    "PredictedOutcome": "Increase",
+    "BinaryHit": "Hit",
+    "CounterfactualOutcome": "Decrease",
+    "Confidence": "91%",
+    "Rationale": "Loss of PTEN synergizes with PIK3CA mutation to elevate proliferation.",
+    "EvidenceToolsUsed": ["KEGG_Reactome", "DepMap_CCLE"],
+    "DirectionalCue": "↑",
+    "SelfConsistencyVote": { "Chains": 3, "Agreement": "3/3", "UncertaintyScore": "Low" }
+  }
+}
